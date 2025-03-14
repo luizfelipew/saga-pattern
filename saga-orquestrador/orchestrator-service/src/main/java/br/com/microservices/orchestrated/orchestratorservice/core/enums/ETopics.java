@@ -1,8 +1,7 @@
-package br.com.microservices.orchestrated.orchestratorservice;
+package br.com.microservices.orchestrated.orchestratorservice.core.enums;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import org.apache.kafka.common.protocol.types.Field;
 
 @Getter
 @AllArgsConstructor
