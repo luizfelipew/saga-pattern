@@ -12,7 +12,7 @@ services:
       MONGO_INITDB_ROOT_USERNAME: admin
       MONGO_INITDB_ROOT_PASSWORD: 123456
     ports:
-      - "27012:27012"
+      - "27017:27017"
 
   product-db:
     image: postgres:latest
@@ -99,7 +99,7 @@ services:
       - orchestrator-saga
     environment:
       - KAFKA_BROKER=kafka:29092
-      - MONDO_DB_URI:mongodb://admin:123456@order-db:27017
+      - MONGO_DB_URI=mongodb://admin:123456@order-db:27017/admin?authMechanism=SCRAM-SHA-256
     ports:
       - "3000:3000"
 

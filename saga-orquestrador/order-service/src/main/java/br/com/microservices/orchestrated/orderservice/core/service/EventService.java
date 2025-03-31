@@ -35,7 +35,7 @@ public class EventService {
 
     public Event findByFilters(EventFilters eventFilters) {
         validateEmptyFilters(eventFilters);
-        if (!isEmpty(eventFilters)) {
+        if (!isEmpty(eventFilters.getOrderId())) {
             return findByOrderId(eventFilters.getOrderId());
         } else {
             return findByTrasactionId(eventFilters.getTransactionId());
