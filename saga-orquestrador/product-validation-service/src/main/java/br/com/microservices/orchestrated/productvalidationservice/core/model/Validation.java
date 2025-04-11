@@ -20,9 +20,6 @@ public class Validation {
     private Integer id;
 
     @Column(nullable = false)
-    private String code;
-
-    @Column(nullable = false)
     private String orderId;
 
     @Column(nullable = false, updatable = false)
