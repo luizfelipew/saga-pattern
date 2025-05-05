@@ -128,10 +128,15 @@ public class PaymentService {
     }
 
     public void realizeRefund(final Event event) {
-        changePaymentStatusToRefund(event);
         event.setStatus(FAIL);
         event.setSource(CURRENT_SOURCE);
-        addHistory(event, "Rollback executed for payment!");
+        try {
+            changePaymentStatusToRefund(event);
+            addHistory(event, "Rollback executed for payment!");
+        } catch (Exception ex) {
+            addHistory(event, "Rollback not executed for payment: ".concat(ex.getMessage()));
+        }
+
         producer.sendEvent(jsonUtil.toJson(event));
     }
 
