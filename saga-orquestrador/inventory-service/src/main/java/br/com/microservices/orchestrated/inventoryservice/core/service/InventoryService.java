@@ -17,12 +17,12 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 
-import static br.com.microservices.orchestrated.inventoryservice.core.enums.ESagaStatus.SUCCESS;
+import static br.com.microservices.orchestrated.inventoryservice.core.enums.ESagaStatus.*;
 
 @Slf4j
 @Service
 @AllArgsConstructor
-public class InvetoryService {
+public class InventoryService {
 
     private static final String CURRENT_SOURCE = "INVENTORY_SERVICE";
 
@@ -40,6 +40,7 @@ public class InvetoryService {
             handleSuccess(event);
         } catch (Exception ex) {
             log.error("Error trying to update inventory: ", ex);
+            handleFailCurrentNotExecuted(event, ex.getMessage());
         }
 
         producer.sendEvent(jsonUtil.toJson(event));
@@ -94,6 +95,7 @@ public class InvetoryService {
         addHistory(event, "Inventory updated successfully.");
     }
 
+
     private void addHistory(final Event event, final String message) {
         var history = History.builder()
                 .source(event.getSource())
@@ -103,6 +105,37 @@ public class InvetoryService {
                 .build();
 
         event.addToHistory(history);
+    }
+
+    private void handleFailCurrentNotExecuted(final Event event, final String message) {
+        event.setStatus(ROLLBACK_PENDING);
+        event.setSource(CURRENT_SOURCE);
+        addHistory(event, "Fail to updated inventory: ".concat(message));
+    }
+
+    public void rollBackInventory(final Event event) {
+        event.setStatus(FAIL);
+        event.setSource(CURRENT_SOURCE);
+        try {
+            returninventoryToPreviousValues(event);
+            addHistory(event, "Rollback executed for inventory!");
+        } catch (Exception ex) {
+            addHistory(event, "Rollback not executed for inventory: ".concat(ex.getMessage()));
+        }
+
+        producer.sendEvent(jsonUtil.toJson(event));
+    }
+
+    private void returninventoryToPreviousValues(final Event event) {
+        orderInventoryRepository
+                .findByOrderIdAndTransactionId(event.getPayload().getId(), event.getTransactionId())
+                .forEach(orderInventory -> {
+                    var inventory = orderInventory.getInventory();
+                    inventory.setAvailable(orderInventory.getOldQuantity());
+                    inventoryRepository.save(inventory);
+                    log.info("Restored inventory ofr order {} from {} to {}",
+                            event.getPayload().getId(), orderInventory.getNewQuantity(), inventory.getAvailable());
+                });
     }
 
     private Inventory findInventoryByProductCode(final String productCode) {
