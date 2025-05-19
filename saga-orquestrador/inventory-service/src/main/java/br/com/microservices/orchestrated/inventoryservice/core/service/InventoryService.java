@@ -133,7 +133,7 @@ public class InventoryService {
                     var inventory = orderInventory.getInventory();
                     inventory.setAvailable(orderInventory.getOldQuantity());
                     inventoryRepository.save(inventory);
-                    log.info("Restored inventory ofr order {} from {} to {}",
+                    log.info("Restored inventory for order {} from {} to {}",
                             event.getPayload().getId(), orderInventory.getNewQuantity(), inventory.getAvailable());
                 });
     }
